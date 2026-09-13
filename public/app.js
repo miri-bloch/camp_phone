@@ -16,7 +16,7 @@ async function loadDashboard() {
 
         // === סה"כ גויס ===
         const totalRaised = teams.reduce(
-            (sum, t) => sum + (t.attributes.donated_real || 0), 0
+            (sum, t) => sum + (t.attributes.donated || 0), 0
         );
 
         document.getElementById("total-amount").textContent =
@@ -32,7 +32,7 @@ async function loadDashboard() {
         // === עשרת המובילות ===
         const sorted = teams
             .slice()
-            .sort((a, b) => b.attributes.donated_real - a.attributes.donated_real)
+            .sort((a, b) => b.attributes.donated - a.attributes.donated)
             .slice(0, 10);
 
         const topNames = sorted.map(t => t.attributes.group);
@@ -44,7 +44,7 @@ async function loadDashboard() {
             const li = document.createElement("li");
             li.innerHTML = `
                 <span class="rank">${index + 1}. ${attrs.group}</span>
-                <span class="amount">₪ ${(attrs.donated_real || 0).toLocaleString()}</span>
+                <span class="amount">₪ ${(attrs.donated || 0).toLocaleString()}</span>
             `;
             topList.appendChild(li);
         });
@@ -128,7 +128,7 @@ function drawRandomBubbles(bubblesBox, pool) {
         b.style.animationDelay = (Math.random() * 3) + "s";
         b.style.animationDuration = (2.5 + Math.random() * 2) + "s";
 
-        b.innerHTML = `${attrs.group}<br><small>₪ ${(attrs.donated_real || 0).toLocaleString()}</small>`;
+        b.innerHTML = `${attrs.group}<br><small>₪ ${(attrs.donated || 0).toLocaleString()}</small>`;
         bubblesBox.appendChild(b);
     });
 }
@@ -174,15 +174,15 @@ function buildSideTicker(teams) {
 
     // מסננים רק בנות עם התרמה מעל ₪1
     const aboveOne = teams
-        .filter(t => (t.attributes.donated_real || 0) > 1)
-        .sort((a, b) => b.attributes.donated_real - a.attributes.donated_real);
+        .filter(t => (t.attributes.donated || 0) > 1)
+        .sort((a, b) => b.attributes.donated - a.attributes.donated);
 
     if (aboveOne.length === 0) return;
 
     // מרכיבים רשימה יחידה
     const itemHtml = aboveOne.map(t => {
         const name = t.attributes.group;
-        const amt = (t.attributes.donated_real || 0).toLocaleString();
+        const amt = (t.attributes.donated || 0).toLocaleString();
         return `<li><span class="t-name">${name}</span><span class="t-amount">₪ ${amt}</span></li>`;
     }).join("");
 
