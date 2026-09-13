@@ -210,6 +210,7 @@ function updateSideTicker() {
 // ============================================
 // קונפטי נופל
 // ============================================
+const confettiColors = ["#ffd700", "#ff5252", "#448aff", "#ffffff", "#ffab00"];
 const confettiBox = document.querySelector(".confetti-container");
 
 function spawnConfetti() {
