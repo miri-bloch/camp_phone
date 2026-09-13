@@ -17,7 +17,8 @@ body {
     color: #fff;
     position: relative;
     overflow-x: hidden;
-    padding: 1rem 1.5rem;
+    /* שמאל — מפנה מקום לרשימה הצדדית הקבועה (260px) כדי שהדשבורד יישאר ממורכז */
+    padding: 1rem 1.5rem 1rem calc(260px + 1.5rem);
 }
 
 /* ====== קונפטי ====== */
