@@ -133,15 +133,35 @@ function drawRandomBubbles(bubblesBox, pool) {
 }
 
 // מחליפה את הבועות כל 15 שניות — בנות אחרות בכל פעם
+// מחליפה את הבועות כל 30 שניות בעדינות — בנות אחרות בכל פעם
 function startBubbleRotation() {
     if (bubbleTimer) clearInterval(bubbleTimer);
     bubbleTimer = setInterval(() => {
         if (lastTeams.length > 0) {
-            spawnBubbles();
+            // מבצעים דהייה רכה לפני ההחלפה
+            fadeOutBubbles();
+            setTimeout(() => {
+                spawnBubbles();
+                fadeInBubbles();
+            }, 600);
         }
-    }, 15000);
+    }, 30000);
 }
 
+// דהייה רכה החוצה
+function fadeOutBubbles() {
+    const bubblesBox = document.getElementById("bubbles");
+    if (!bubblesBox) return;
+    bubblesBox.style.transition = "opacity 0.6s ease";
+    bubblesBox.style.opacity = "0";
+}
+function fadeInBubbles() {
+    const bubblesBox = document.getElementById("bubbles");
+    if (!bubblesBox) return;
+    setTimeout(() => {
+        bubblesBox.style.opacity = "1";
+    }, 50);
+}
 // ============================================
 // קונפטי נופל
 // ============================================

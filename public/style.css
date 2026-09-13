@@ -78,11 +78,14 @@ body {
     font-size: 0.78rem;
     padding: 0.5rem;
     box-shadow: 0 0 20px rgba(255,215,0,0.08);
-    animation: bubbleFloat 18s ease-in-out infinite;
+    animation: drift 20s ease-in-out infinite;
 }
-@keyframes bubbleFloat {
-    0%, 100% { transform: translateY(0) scale(1); }
-    50%      { transform: translateY(-18px) scale(1.04); }
+@keyframes drift {
+    0%   { transform: translate(0, 0) scale(1); }
+    25%  { transform: translate(20vw, -12vh) scale(1.05); }
+    50%  { transform: translate(-15vw, 8vh) scale(0.97); }
+    75%  { transform: translate(10vw, 15vh) scale(1.03); }
+    100% { transform: translate(0, 0) scale(1); }
 }
 
 /* ====== הדשבורד ====== */

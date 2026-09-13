@@ -1,8 +1,8 @@
 // ============================================
 // שרת Node.js — מגיש דשבורד + מקבל פניות מה-IVR
 // ============================================
-const express = require("express");
-
+const express = require('express');
+const app = express();
 // מאפשר לשרת לקרוא תוכן של בקשת POST
 app.use(express.urlencoded({ extended: true }));
 
