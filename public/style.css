@@ -261,3 +261,71 @@ body {
     0%, 100% { transform: translateY(0) scale(1); }
     50%      { transform: translateY(-10px) scale(1.03); }
 }
+
+/* ====== רשימה דינמית בצד — כל הבנות מעל ₪1 ====== */
+.side-ticker {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100vh;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    background: rgba(20, 10, 3, 0.6);
+    border-right: 2px solid rgba(255, 215, 0, 0.35);
+    box-shadow: 6px 0 24px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+    pointer-events: none;
+}
+.side-ticker-head {
+    text-align: center;
+    padding: 0.7rem 0.5rem;
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: #ffd700;
+    background: linear-gradient(150deg, #351d0e, #5a3a20 60%, #2a1509);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.25);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+    letter-spacing: 0.5px;
+}
+.side-ticker-viewport {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+.side-ticker-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    /* מתנהל עם אנימציית הגלילה מה-JS */
+    will-change: transform;
+}
+.side-ticker-list.scrolling {
+    animation: scrollUp linear infinite;
+}
+@keyframes scrollUp {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-50%); }
+}
+.side-ticker-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.8rem;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+    color: #f5e9d0;
+    font-size: 0.9rem;
+}
+.side-ticker-list li .t-name {
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.side-ticker-list li .t-amount {
+    font-weight: 900;
+    color: #ffd700;
+    white-space: nowrap;
+}

@@ -52,6 +52,7 @@ async function loadDashboard() {
         // === שומרים נתונים עדכניים ומציירים בועות ===
         rememberData(teams, topNames);
         spawnBubbles();
+        updateSideTicker();
 
     } catch (err) {
         console.error("שגיאה בטעינת נתונים:", err);
@@ -163,9 +164,52 @@ function fadeInBubbles() {
     }, 50);
 }
 // ============================================
+// רשימה דינמית בצד — כל הבנות עם התרמה מעל ₪1
+// ============================================
+
+// בונה את הרשימה בכל שליפה ומפעיל גלילה רציפה
+function buildSideTicker(teams) {
+    const list = document.getElementById("side-ticker-list");
+    if (!list) return;
+
+    // מסננים רק בנות עם התרמה מעל ₪1
+    const aboveOne = teams
+        .filter(t => (t.attributes.donated_real || 0) > 1)
+        .sort((a, b) => b.attributes.donated_real - a.attributes.donated_real);
+
+    if (aboveOne.length === 0) return;
+
+    // מרכיבים רשימה יחידה
+    const itemHtml = aboveOne.map(t => {
+        const name = t.attributes.group;
+        const amt = (t.attributes.donated_real || 0).toLocaleString();
+        return `<li><span class="t-name">${name}</span><span class="t-amount">₪ ${amt}</span></li>`;
+    }).join("");
+
+    // משכפלים פעמיים כדי שהגלילה תהיה חלקה ואינסופית
+    list.classList.remove("scrolling");
+    list.innerHTML = itemHtml + itemHtml;
+
+    // מחשבים אורך גלילה לפי מספר הפריטים
+    const itemsPerScreen = Math.max(4, aboveOne.length);
+    const durationSeconds = itemsPerScreen * 2.2; // כמה שניות לכל "מסך" של רשימה
+
+    // מריץ את האנימציה מחדש (עם ריסט לבטל אנימציה ישנה)
+    void list.offsetWidth; // forcing reflow
+    list.style.animationDuration = durationSeconds + "s";
+    list.classList.add("scrolling");
+}
+
+// נעדכן גם מהקריאה הראשית — נקרא מתוך loadDashboard
+function updateSideTicker() {
+    if (lastTeams.length > 0) {
+        buildSideTicker(lastTeams);
+    }
+}
+
+// ============================================
 // קונפטי נופל
 // ============================================
-const confettiColors = ["#ffd700", "#ff5252", "#448aff", "#ffffff", "#ffab00"];
 const confettiBox = document.querySelector(".confetti-container");
 
 function spawnConfetti() {
