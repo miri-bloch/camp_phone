@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>למען תורתך — דשבורד התרמות</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- קונפטי ונצנוצים נעים ברקע -->
+    <div class="confetti-container" aria-hidden="true"></div>
+    <div class="bubbles" id="bubbles" aria-hidden="true"></div>
+    <div class="sparkles" aria-hidden="true"></div>
+
+    <div class="dashboard">
+
+        <!-- כותרת עליונה עם הלוגו במרכז -->
+        <header class="header-gold">
+            <div class="logo-area">
+                <!-- כאן תוסיפי את הלוגו של "למען תורתך" -->
+                <img src="/IMG.png" alt="למען תורתך" class="logo-img">
+            </div>
+            <h1>מבצע ההתרמות</h1>
+        <p class="subtitle">כולנו למען לומדי התורה</p> 
+       </header>
+
+        <!-- כרטיסי הסיכום -->
+        <section class="cards">
+            <div class="card">
+                <span class="card-label">סה"כ גויס</span>
+                <strong id="total-amount" class="card-value">₪ 0</strong>
+            </div>
+            <div class="card">
+                <span class="card-label">מטרה</span>
+                <strong id="target" class="card-value">₪ 0</strong>
+            </div>
+            <div class="card highlight">
+                <span class="card-label">אחוז התקדמות</span>
+                <strong id="progress" class="card-value">0%</strong>
+            </div>
+        </section>
+
+        <!-- פס התקדמות -->
+        <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+        </div>
+
+        <!-- עשרת המובילות -->
+        <section class="top-ten">
+            <h2>🏆 עשרת המובילות 🏆</h2>
+            <ul id="top-list"></ul>
+        </section>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
