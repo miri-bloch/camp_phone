@@ -5,6 +5,14 @@ const API_URL = "https://api.charidy.com/api/v1/campaign/47850/teams?q=%D7%A4%D7
 const GOAL = 941 * 4800; // = 4,516,800
 
 // ============================================
+// סינון קבוצות — רק "סמינר פוירשטיין" + מספר
+// ============================================
+function isFeursteinTeam(attrs) {
+    const name = attrs.name || "";
+    return /סמינר\s*פוירשטיין\s*\d+/.test(name);
+}
+
+// ============================================
 // הפעלת הדשבורד
 // ============================================
 async function loadDashboard() {
@@ -12,11 +20,14 @@ async function loadDashboard() {
         const response = await fetch(API_URL);
         if (!response.ok) throw new Error(`שגיאת שרת: ${response.status}`);
         const json = await response.json();
-        const teams = json.data || [];
+        const rawTeams = json.data || [];
+
+        // מסננים רק קבוצות בשם "סמינר פוירשטיין N"
+        const teams = rawTeams.filter(t => isFeursteinTeam(t.attributes));
 
         // === סה"כ גויס ===
         const totalRaised = teams.reduce(
-            (sum, t) => sum + (t.attributes.donated || 0), 0
+            (sum, t) => sum + Number(t.attributes.donated || 0), 0
         );
 
         document.getElementById("total-amount").textContent =
@@ -32,7 +43,7 @@ async function loadDashboard() {
         // === עשרת המובילות ===
         const sorted = teams
             .slice()
-            .sort((a, b) => b.attributes.donated - a.attributes.donated)
+            .sort((a, b) => Number(b.attributes.donated) - Number(a.attributes.donated))
             .slice(0, 10);
 
         const topList = document.getElementById("top-list");
