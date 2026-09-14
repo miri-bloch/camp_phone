@@ -35,8 +35,6 @@ async function loadDashboard() {
             .sort((a, b) => b.attributes.donated - a.attributes.donated)
             .slice(0, 10);
 
-        const topNames = sorted.map(t => t.attributes.group);
-
         const topList = document.getElementById("top-list");
         topList.innerHTML = "";
         sorted.forEach((team, index) => {
@@ -49,9 +47,8 @@ async function loadDashboard() {
             topList.appendChild(li);
         });
 
-        // === שומרים נתונים עדכניים ומציירים בועות ===
-        rememberData(teams, topNames);
-        spawnBubbles();
+        // === שומרים נתונים עדכניים ===
+        rememberData(teams);
         updateSideTicker();
 
     } catch (err) {
@@ -60,109 +57,15 @@ async function loadDashboard() {
 }
 
 // ============================================
-// בועות רקע — מתחלפות כל כמה שניות
+// נתונים עדכניים לשימוש ברשימה הדינמית
 // ============================================
 let lastTeams = [];
-let lastTopNames = [];
-let bubbleTimer = null;
 
-// שומרים את הנתונים העדכניים לשימוש בהחלפת הבועות
-function rememberData(teams, topNames) {
+// זוכרת את הנתונים העדכניים לצד הרשימה הצדדית
+function rememberData(teams) {
     lastTeams = teams;
-    lastTopNames = topNames;
 }
 
-// בוחרת בנות שלא במובילות ויוצרת מהן בועות שמתחלפות
-function spawnBubbles() {
-    const bubblesBox = document.getElementById("bubbles");
-    if (!bubblesBox) return;
-
-    // בנות שלא בעשרת המובילות
-    let pool = lastTeams.filter(t =>
-        !lastTopNames.includes(t.attributes.group)
-    );
-
-    // אם אין מספיק — לוקחים גם מהמובילות כדי לא להשאיר ריק
-    if (pool.length < 8) {
-        pool = lastTeams.slice();
-    }
-
-    drawRandomBubbles(bubblesBox, pool);
-}
-
-// מציירת בועות על רשת — מפוזרות, לא חופפות, בחירה אקראית
-function drawRandomBubbles(bubblesBox, pool) {
-    bubblesBox.innerHTML = "";
-
-    // בחירה אקראית של עד 25 בנות
-    const shuffled = pool.slice().sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, 25);
-
-    // רשת 5x5 כדי לפזר על כל המסך בלי חפיפה
-    const cols = 5;
-    const rows = 5;
-
-    selected.forEach((team, i) => {
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-
-        const cellX = (col / cols) * 90 + 2;   // אחוז מרוחב
-        const cellY = (row / rows) * 90 + 2;   // אחוז מגובה
-
-        // קטנה אקראית בתוך התא — שלא ייראה "מרובע"
-        const jitterX = (Math.random() - 0.5) * 15;
-        const jitterY = (Math.random() - 0.5) * 15;
-
-        const attrs = team.attributes;
-        const b = document.createElement("div");
-        b.className = "bubble";
-
-        b.style.left = (cellX + jitterX) + "%";
-        b.style.top = (cellY + jitterY) + "%";
-
-        // גודל אחיד יחסית כדי שלא יחפפו
-        const size = 60 + Math.random() * 30;
-        b.style.width = size + "px";
-        b.style.height = size + "px";
-
-        b.style.animationDelay = (Math.random() * 3) + "s";
-        b.style.animationDuration = (2.5 + Math.random() * 2) + "s";
-
-        b.innerHTML = `${attrs.group}<br><small>₪ ${(attrs.donated || 0).toLocaleString()}</small>`;
-        bubblesBox.appendChild(b);
-    });
-}
-
-// מחליפה את הבועות כל 15 שניות — בנות אחרות בכל פעם
-// מחליפה את הבועות כל 30 שניות בעדינות — בנות אחרות בכל פעם
-function startBubbleRotation() {
-    if (bubbleTimer) clearInterval(bubbleTimer);
-    bubbleTimer = setInterval(() => {
-        if (lastTeams.length > 0) {
-            // מבצעים דהייה רכה לפני ההחלפה
-            fadeOutBubbles();
-            setTimeout(() => {
-                spawnBubbles();
-                fadeInBubbles();
-            }, 600);
-        }
-    }, 30000);
-}
-
-// דהייה רכה החוצה
-function fadeOutBubbles() {
-    const bubblesBox = document.getElementById("bubbles");
-    if (!bubblesBox) return;
-    bubblesBox.style.transition = "opacity 0.6s ease";
-    bubblesBox.style.opacity = "0";
-}
-function fadeInBubbles() {
-    const bubblesBox = document.getElementById("bubbles");
-    if (!bubblesBox) return;
-    setTimeout(() => {
-        bubblesBox.style.opacity = "1";
-    }, 50);
-}
 // ============================================
 // רשימה דינמית בצד — כל הבנות עם התרמה מעל ₪1
 // ============================================
@@ -232,7 +135,6 @@ spawnConfetti();
 // ============================================
 async function init() {
     await loadDashboard();
-    startBubbleRotation();
 }
 
 init();

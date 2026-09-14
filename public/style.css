@@ -58,37 +58,6 @@ body {
     to   { opacity: 1; }
 }
 
-/* ====== בועות רקע עם שמות ====== */
-.bubbles {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-}
-.bubble {
-    position: absolute;
-    background: rgba(255,215,0,0.06);
-    border: 1px solid rgba(255,215,0,0.18);
-    border-radius: 50%;
-    color: rgba(255,240,200,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-size: 0.78rem;
-    padding: 0.5rem;
-    box-shadow: 0 0 20px rgba(255,215,0,0.08);
-    animation: drift 20s ease-in-out infinite;
-}
-@keyframes drift {
-    0%   { transform: translate(0, 0) scale(1); }
-    25%  { transform: translate(20vw, -12vh) scale(1.05); }
-    50%  { transform: translate(-15vw, 8vh) scale(0.97); }
-    75%  { transform: translate(10vw, 15vh) scale(1.03); }
-    100% { transform: translate(0, 0) scale(1); }
-}
-
 /* ====== הדשבורד ====== */
 .dashboard {
     position: relative;
@@ -241,26 +210,6 @@ body {
 @keyframes fadeUp {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
-}
-
-.bubble {
-    position: absolute;
-    background: rgba(255,215,0,0.06);
-    border: 1px solid rgba(255,215,0,0.18);
-    border-radius: 50%;
-    color: rgba(255,240,200,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-size: 0.78rem;
-    padding: 0.5rem;
-    box-shadow: 0 0 20px rgba(255,215,0,0.08);
-    animation: bubbleFloat 3s ease-in-out infinite;
-}
-@keyframes bubbleFloat {
-    0%, 100% { transform: translateY(0) scale(1); }
-    50%      { transform: translateY(-10px) scale(1.03); }
 }
 
 /* ====== רשימה דינמית בצד — כל הבנות מעל ₪1 ====== */
