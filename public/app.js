@@ -12,6 +12,15 @@ function isFeursteinTeam(attrs) {
     return /סמינר\s*פוירשטיין\s*\d+/.test(name);
 }
 
+// שם להצגה: מעדיפים את קבוצת הבנות, ואם ריקה — מחלצים שם מהשם המלא
+function displayName(attrs) {
+    if (attrs.group && String(attrs.group).trim()) {
+        return attrs.group;
+    }
+    const before = String(attrs.name || "").split(/\s*סמינר\s*פוירשטיין/)[0].trim();
+    return before || attrs.name || "";
+}
+
 // ============================================
 // הפעלת הדשבורד
 // ============================================
@@ -52,7 +61,7 @@ async function loadDashboard() {
             const attrs = team.attributes;
             const li = document.createElement("li");
             li.innerHTML = `
-                <span class="rank">${index + 1}. ${attrs.group}</span>
+                <span class="rank">${index + 1}. ${displayName(attrs)}</span>
                 <span class="amount">₪ ${(attrs.donated || 0).toLocaleString()}</span>
             `;
             topList.appendChild(li);
@@ -95,7 +104,7 @@ function buildSideTicker(teams) {
 
     // מרכיבים רשימה יחידה
     const itemHtml = aboveOne.map(t => {
-        const name = t.attributes.group;
+        const name = displayName(t.attributes);
         const amt = (t.attributes.donated || 0).toLocaleString();
         return `<li><span class="t-name">${name}</span><span class="t-amount">₪ ${amt}</span></li>`;
     }).join("");
