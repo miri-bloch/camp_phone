@@ -1,122 +1,21 @@
 // ============================================
-// הגדרות
+// דשבורד — לקוח
+// הדפדפן קורא את הנתונים מהשרת שלנו (/api/dashboard),
+// והשרת הוא זה שמדבר עם צ'רידי פעם אחת ושומר במטמון.
+// כך כל המשתמשים מקבלים את אותם נתונים מיד, בלי להעמיס על צ'רידי.
 // ============================================
-const API_URL = "https://api.charidy.com/api/v1/campaign/47850/teams?q=%D7%A4%D7%95%D7%99%D7%A8%D7%A9%D7%98%D7%99%D7%99%D7%9F";
 const GOAL = 941 * 4800; // = 4,516,800
 
 // ============================================
-// סינון קבוצות — רק "סמינר פוירשטיין" + מספר
-// ============================================
-function isFeursteinTeam(attrs) {
-    const name = attrs.name || "";
-    return /סמינר\s*פוירשטיין\s*\d+/.test(name);
-}
-
-// שם להצגה: מעדיפים את קבוצת הבנות, ואם ריקה — מחלצים שם מהשם המלא
-function displayName(attrs) {
-    if (attrs.group && String(attrs.group).trim()) {
-        return attrs.group;
-    }
-    const before = String(attrs.name || "").split(/\s*סמינר\s*פוירשטיין/)[0].trim();
-    return before || attrs.name || "";
-}
-
-// ============================================
-// שליפת כל קבוצות סמינר פוירשטיין
-// השרת מגביל כל חיפוש לכ-100 תוצאות, ולכן סורקים לפי קידומות
-// (1..99). רק קבוצות עם קוד רלוונטי (עד 950) נכללות.
-// הקריאות מדורגות אחת-אחת במרווח קצר כדי לא להעמיס על השרת.
-// ============================================
-const MAX_TEAM_CODE = 950; // אין בנות מעל קוד 950 — הן לא רלוונטיות
-
-// מחלץ את מספר הקבוצה מתוך השם "סמינר פוירשטיין N"
-function teamCode(attrs) {
-    const name = String(attrs.name || "");
-    const m = name.match(/סמינר\s*פוירשטיין\s*(\d+)/);
-    return m ? Number(m[1]) : NaN;
-}
-
-async function fetchAllFeursteinTeams() {
-    const all = new Map(); // slug -> team
-
-    const fetchPrefix = async (prefix) => {
-        const url = "https://api.charidy.com/api/v1/campaign/47850/teams?q=" +
-            encodeURIComponent("סמינר פוירשטיין " + prefix);
-        try {
-            const response = await fetch(url);
-            if (!response.ok) return;
-            const json = await response.json();
-            for (const t of (json.data || [])) {
-                const attrs = t.attributes || {};
-                const code = teamCode(attrs);
-                // רק קבוצות פוירשטיין, עם slug, וקוד רלוונטי (עד MAX_TEAM_CODE)
-                if (!isFeursteinTeam(attrs) || !attrs.slug) continue;
-                if (isNaN(code) || code > MAX_TEAM_CODE) continue;
-                all.set(attrs.slug, t);
-            }
-        } catch (e) {
-            // מדלגים על תקלה של קידומת אחת וממשיכים לאחרות
-            console.warn("שגיאה בשליפת קידומת", prefix, e);
-        }
-    };
-
-    // סורקים לפי קידומות 1..99, אחת-אחת ובמרווח קצר בין הקריאות
-    const delay = (ms) => new Promise((r) => setTimeout(r, ms));
-    for (let n = 1; n <= 99; n++) {
-        await fetchPrefix(String(n));
-        // הפסקה קצרה בין הקריאות כדי לא להציף את השרת
-        await delay(150);
-    }
-
-    return [...all.values()];
-}
-
-// ============================================
-// הפעלת הדשבורד
+// טעינת הדשבורד מהשרת
 // ============================================
 async function loadDashboard() {
     try {
-        // שולפים את כל קבוצות סמינר פוירשטיין דרך כל הקידומות
-        const teams = await fetchAllFeursteinTeams();
-        if (teams.length === 0) throw new Error("לא נמצאו קבוצות");
-
-        // === סה"כ גויס ===
-        const totalRaised = teams.reduce(
-            (sum, t) => sum + Number(t.attributes.donated || 0), 0
-        );
-
-        document.getElementById("total-amount").textContent =
-            "₪ " + totalRaised.toLocaleString();
-        document.getElementById("target").textContent =
-            "₪ " + GOAL.toLocaleString();
-
-        const percent = GOAL > 0 ? Math.round((totalRaised / GOAL) * 100) : 0;
-        document.getElementById("progress").textContent = percent + "%";
-        document.getElementById("progress-fill").style.width =
-            Math.min(percent, 100) + "%";
-
-        // === עשרת המובילות ===
-        const sorted = teams
-            .slice()
-            .sort((a, b) => Number(b.attributes.donated) - Number(a.attributes.donated))
-            .slice(0, 10);
-
-        const topList = document.getElementById("top-list");
-        topList.innerHTML = "";
-        sorted.forEach((team, index) => {
-            const attrs = team.attributes;
-            const li = document.createElement("li");
-            li.innerHTML = `
-                <span class="rank">${index + 1}. ${displayName(attrs)}</span>
-                <span class="amount">₪ ${(attrs.donated || 0).toLocaleString()}</span>
-            `;
-            topList.appendChild(li);
-        });
-
-        // === שומרים נתונים עדכניים ===
-        rememberData(teams);
-        updateSideTicker();
-
+        // שולפים את הנתונים המוכנים מהשרת שלנו (מהיר — נתונים כבר שמורים)
+        const response = await fetch("/api/dashboard");
+        if (!response.ok) throw new Error(`שגיאת שרת: ${response.status}`);
+        const data = await response.json();
+        renderFromServer(data);
     } catch (err) {
         console.error("שגיאה בטעינת נתונים:", err);
     }
@@ -127,7 +26,6 @@ async function loadDashboard() {
 // ============================================
 let lastTeams = [];
 
-// זוכרת את הנתונים העדכניים לצד הרשימה הצדדית
 function rememberData(teams) {
     lastTeams = teams;
 }
@@ -138,27 +36,23 @@ function rememberData(teams) {
 // כדי שגם הבנות שבסוף הרשימה יגיעו אליהן.
 // ============================================
 
-// סדרת ה-slug הנוכחית ברשימה (לבדיקה אם הסדרה השתנתה)
+// סדרת השמות הנוכחית ברשימה (לבדיקה אם הסדרה השתנתה)
 let tickerSlugs = [];
 
 // בונה את הרשימה אם עדיין לא קיימת, ומחדשת את הסכומים במקום
-function buildSideTicker(teams) {
+function buildSideTicker(items) {
     const list = document.getElementById("side-ticker-list");
     if (!list) return;
 
-    // מסננים רק בנות עם התרמה מעל ₪1
-    const aboveOne = teams
-        .filter(t => (t.attributes.donated || 0) > 1)
-        .sort((a, b) => b.attributes.donated - a.attributes.donated);
-
+    const aboveOne = items ? items.slice() : [];
     if (aboveOne.length === 0) return;
 
-    const newSlugs = aboveOne.map(t => t.attributes.slug);
+    const newSlugs = aboveOne.map(item => item.name);
 
-    // אם הסדרה זהה למה שכבר מוצג — רק מעדכנים את הסכומים בלי לגעת בגלילה
+    // אם הסדרה זהה למה שכבר מוצג — רק מעדכן את הסכומים בלי לגעת בגלילה
     if (tickerSlugs.join("|") === newSlugs.join("|") && list.children.length === aboveOne.length * 2) {
-        aboveOne.forEach((t, i) => {
-            const amt = (t.attributes.donated || 0).toLocaleString();
+        aboveOne.forEach((item, i) => {
+            const amt = item.amount.toLocaleString();
             const first = list.children[i];
             const second = list.children[i + aboveOne.length];
             if (first) first.querySelector(".t-amount").textContent = "₪ " + amt;
@@ -170,31 +64,27 @@ function buildSideTicker(teams) {
     // הסדרה השתנתה — בונים רשימה חדשה ומתחילים גלילה
     tickerSlugs = newSlugs;
 
-    const itemHtml = aboveOne.map(t => {
-        const name = displayName(t.attributes);
-        const amt = (t.attributes.donated || 0).toLocaleString();
-        return `<li><span class="t-name">${name}</span><span class="t-amount">₪ ${amt}</span></li>`;
+    const itemHtml = aboveOne.map(item => {
+        const amt = item.amount.toLocaleString();
+        return `<li><span class="t-name">${item.name}</span><span class="t-amount">₪ ${amt}</span></li>`;
     }).join("");
 
     // משכפלים פעמיים כדי שהגלילה תהיה חלקה ואינסופית
     list.classList.remove("scrolling");
     list.innerHTML = itemHtml + itemHtml;
 
-    // מחשבים אורך גלילה לפי מספר הפריטים
-    const itemsPerScreen = Math.max(4, aboveOne.length);
-    const durationSeconds = itemsPerScreen * 2.2;
+    // קצב קבוע (~0.47 שניות לפריט) כך שגם עם רשימה ארוכה
+    // כל הבנות עוברות במחזור סביר של כחמש דקות, ולא ~23 דקות.
+    const durationSeconds = Math.max(20, Math.round(aboveOne.length * 0.47));
 
-    // מריץ את האנימציה מחדש
     void list.offsetWidth; // forcing reflow
     list.style.animationDuration = durationSeconds + "s";
     list.classList.add("scrolling");
 }
 
-// נעדכן גם מהקריאה הראשית — נקרא מתוך loadDashboard
-function updateSideTicker() {
-    if (lastTeams.length > 0) {
-        buildSideTicker(lastTeams);
-    }
+function updateSideTicker(items) {
+    if (items && items.length > 0) buildSideTicker(items);
+    else if (lastTeams.length > 0) buildSideTicker(lastTeams);
 }
 
 // ============================================
@@ -219,16 +109,55 @@ spawnConfetti();
 
 // ============================================
 // הפעלה
+// אם השרת עוד בשליפה הראשונה (טעינה ראשונה, לא קיים מטמון),
+// נמשיך לבדוק כמה פעמים עד שהנתונים המלאים מגיעים.
 // ============================================
 async function init() {
     await loadDashboard();
+    // אם בטעינה הראשונה אין עדיין נתונים (השרת עדיין בונה מטמון)
+    // — ממשיך לבדוק כל 5 שניות עד שהנתונים המלאים מגיעים
+    let attempts = 0;
+    while (lastTeams.length === 0 && attempts < 60) {
+        attempts++;
+        await new Promise((r) => setTimeout(r, 5000));
+        try {
+            const res = await fetch("/api/dashboard");
+            if (res.ok) {
+                const data = await res.json();
+                if ((data.top || []).length > 0) {
+                    renderFromServer(data);
+                    break;
+                }
+            }
+        } catch (e) {
+            // נמשיך לבדוק בכל מקרה
+        }
+    }
+}
+
+function renderFromServer(data) {
+    document.getElementById("total-amount").textContent =
+        "₪ " + Number(data.total || 0).toLocaleString();
+    document.getElementById("target").textContent =
+        "₪ " + GOAL.toLocaleString();
+    const percent = GOAL > 0 ? Math.round((data.total / GOAL) * 100) : 0;
+    document.getElementById("progress").textContent = percent + "%";
+    document.getElementById("progress-fill").style.width = Math.min(percent, 100) + "%";
+
+    const topList = document.getElementById("top-list");
+    topList.innerHTML = "";
+    (data.top || []).forEach((item, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+            <span class="rank">${index + 1}. ${item.name}</span>
+            <span class="amount">₪ ${item.amount.toLocaleString()}</span>
+        `;
+        topList.appendChild(li);
+    });
+
+    buildSideTicker(data.ticker || []);
+    updateSideTicker(data.ticker || []);
+    rememberData(data.ticker || []);
 }
 
 init();
-
-// רענון נתוני הדשבורד כל 5 דקות (רק כשהדף גלוי).
-// הקריאות עצמן מפוזרות אחת-אחת בתוך לולאת השליפה,
-// והנתונים מוצגים רק אחרי שכולן חזרו.
-setInterval(() => {
-    if (!document.hidden) loadDashboard();
-}, 300000);
