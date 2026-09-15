@@ -5,53 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>למען תורתך — דשבורד התרמות</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* ====== דף שיפוצים זמני ====== */
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Heebo', Arial, sans-serif;
-            background: linear-gradient(160deg, #2b1709 0%, #4a2f1a 50%, #1c0f05 100%);
-            color: #fff;
-            padding: 1.5rem;
-        }
-        .maintenance-box {
-            text-align: center;
-            background: rgba(255,255,255,0.07);
-            border: 2px solid rgba(255,215,0,0.4);
-            border-radius: 24px;
-            padding: 2.5rem 2rem;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.5);
-            max-width: 420px;
-            width: 100%;
-        }
-        .maintenance-box .logo-img {
-            max-height: 90px;
-            max-width: 70%;
-            margin-bottom: 1rem;
-        }
-        .maintenance-box h1 {
-            font-size: 1.6rem;
-            font-weight: 900;
-            color: #ffd700;
-            margin-bottom: 0.5rem;
-            text-shadow: 0 2px 6px rgba(0,0,0,0.8);
-        }
-        .maintenance-box p {
-            color: #f5e9d0;
-            font-size: 1rem;
-            margin: 0;
-        }
-    </style>
 </head>
 <body>
-    <div class="maintenance-box">
-        <img src="/IMG.png" alt="למען תורתך" class="logo-img">
-        <h1>האתר בשיפוצים</h1>
-        <p>אנחנו עובדים על משהו חדש — נחזור בקרוב, בעזרת ה׳ 😊</p>
+    <!-- קונפטי נופל -->
+    <div class="confetti-container"></div>
+
+    <!-- הדשבורד -->
+    <div class="dashboard">
+        <!-- כותרת -->
+        <header class="header-gold">
+            <div class="logo-area">
+                <img src="/IMG.png" alt="למען תורתך" class="logo-img">
+            </div>
+            <h1>מסע התרמות</h1>
+            <div class="subtitle">בנות סמינר פוירשטיין</div>
+        </header>
+
+        <!-- כרטיסי הנתונים -->
+        <div class="cards">
+            <div class="card highlight">
+                <span class="card-label">סה״כ גויס</span>
+                <span class="card-value" id="total-amount">₪ 0</span>
+            </div>
+            <div class="card">
+                <span class="card-label">היעד</span>
+                <span class="card-value" id="target">₪ 0</span>
+            </div>
+            <div class="card">
+                <span class="card-label">אחוז גיוס</span>
+                <span class="card-value" id="progress">0%</span>
+            </div>
+        </div>
+
+        <!-- פס התקדמות -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+
+        <!-- עשרת המובילות -->
+        <section class="top-ten">
+            <h2>🌟 עשר המובילות 🌟</h2>
+            <ul id="top-list"></ul>
+        </section>
     </div>
+
+    <!-- רשימה דינמית בצד -->
+    <aside class="side-ticker">
+        <div class="side-ticker-head">🎗️ התורמות 🎗️</div>
+        <div class="side-ticker-viewport">
+            <ul class="side-ticker-list" id="side-ticker-list"></ul>
+        </div>
+    </aside>
+
+    <script src="app.js"></script>
 </body>
 </html>

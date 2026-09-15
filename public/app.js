@@ -22,17 +22,63 @@ function displayName(attrs) {
 }
 
 // ============================================
+// שליפת כל קבוצות סמינר פוירשטיין
+// השרת מגביל כל חיפוש לכ-100 תוצאות, ולכן סורקים לפי קידומות
+// (1..99). רק קבוצות עם קוד רלוונטי (עד 950) נכללות.
+// הקריאות מדורגות אחת-אחת במרווח קצר כדי לא להעמיס על השרת.
+// ============================================
+const MAX_TEAM_CODE = 950; // אין בנות מעל קוד 950 — הן לא רלוונטיות
+
+// מחלץ את מספר הקבוצה מתוך השם "סמינר פוירשטיין N"
+function teamCode(attrs) {
+    const name = String(attrs.name || "");
+    const m = name.match(/סמינר\s*פוירשטיין\s*(\d+)/);
+    return m ? Number(m[1]) : NaN;
+}
+
+async function fetchAllFeursteinTeams() {
+    const all = new Map(); // slug -> team
+
+    const fetchPrefix = async (prefix) => {
+        const url = "https://api.charidy.com/api/v1/campaign/47850/teams?q=" +
+            encodeURIComponent("סמינר פוירשטיין " + prefix);
+        try {
+            const response = await fetch(url);
+            if (!response.ok) return;
+            const json = await response.json();
+            for (const t of (json.data || [])) {
+                const attrs = t.attributes || {};
+                const code = teamCode(attrs);
+                // רק קבוצות פוירשטיין, עם slug, וקוד רלוונטי (עד MAX_TEAM_CODE)
+                if (!isFeursteinTeam(attrs) || !attrs.slug) continue;
+                if (isNaN(code) || code > MAX_TEAM_CODE) continue;
+                all.set(attrs.slug, t);
+            }
+        } catch (e) {
+            // מדלגים על תקלה של קידומת אחת וממשיכים לאחרות
+            console.warn("שגיאה בשליפת קידומת", prefix, e);
+        }
+    };
+
+    // סורקים לפי קידומות 1..99, אחת-אחת ובמרווח קצר בין הקריאות
+    const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+    for (let n = 1; n <= 99; n++) {
+        await fetchPrefix(String(n));
+        // הפסקה קצרה בין הקריאות כדי לא להציף את השרת
+        await delay(150);
+    }
+
+    return [...all.values()];
+}
+
+// ============================================
 // הפעלת הדשבורד
 // ============================================
 async function loadDashboard() {
     try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error(`שגיאת שרת: ${response.status}`);
-        const json = await response.json();
-        const rawTeams = json.data || [];
-
-        // מסננים רק קבוצות בשם "סמינר פוירשטיין N"
-        const teams = rawTeams.filter(t => isFeursteinTeam(t.attributes));
+        // שולפים את כל קבוצות סמינר פוירשטיין דרך כל הקידומות
+        const teams = await fetchAllFeursteinTeams();
+        if (teams.length === 0) throw new Error("לא נמצאו קבוצות");
 
         // === סה"כ גויס ===
         const totalRaised = teams.reduce(
@@ -88,9 +134,14 @@ function rememberData(teams) {
 
 // ============================================
 // רשימה דינמית בצד — כל הבנות עם התרמה מעל ₪1
+// הגלילה לא מתאפסת בכל רענון — רק הסכומים מתעדכנים,
+// כדי שגם הבנות שבסוף הרשימה יגיעו אליהן.
 // ============================================
 
-// בונה את הרשימה בכל שליפה ומפעיל גלילה רציפה
+// סדרת ה-slug הנוכחית ברשימה (לבדיקה אם הסדרה השתנתה)
+let tickerSlugs = [];
+
+// בונה את הרשימה אם עדיין לא קיימת, ומחדשת את הסכומים במקום
 function buildSideTicker(teams) {
     const list = document.getElementById("side-ticker-list");
     if (!list) return;
@@ -102,7 +153,23 @@ function buildSideTicker(teams) {
 
     if (aboveOne.length === 0) return;
 
-    // מרכיבים רשימה יחידה
+    const newSlugs = aboveOne.map(t => t.attributes.slug);
+
+    // אם הסדרה זהה למה שכבר מוצג — רק מעדכנים את הסכומים בלי לגעת בגלילה
+    if (tickerSlugs.join("|") === newSlugs.join("|") && list.children.length === aboveOne.length * 2) {
+        aboveOne.forEach((t, i) => {
+            const amt = (t.attributes.donated || 0).toLocaleString();
+            const first = list.children[i];
+            const second = list.children[i + aboveOne.length];
+            if (first) first.querySelector(".t-amount").textContent = "₪ " + amt;
+            if (second) second.querySelector(".t-amount").textContent = "₪ " + amt;
+        });
+        return;
+    }
+
+    // הסדרה השתנתה — בונים רשימה חדשה ומתחילים גלילה
+    tickerSlugs = newSlugs;
+
     const itemHtml = aboveOne.map(t => {
         const name = displayName(t.attributes);
         const amt = (t.attributes.donated || 0).toLocaleString();
@@ -115,9 +182,9 @@ function buildSideTicker(teams) {
 
     // מחשבים אורך גלילה לפי מספר הפריטים
     const itemsPerScreen = Math.max(4, aboveOne.length);
-    const durationSeconds = itemsPerScreen * 2.2; // כמה שניות לכל "מסך" של רשימה
+    const durationSeconds = itemsPerScreen * 2.2;
 
-    // מריץ את האנימציה מחדש (עם ריסט לבטל אנימציה ישנה)
+    // מריץ את האנימציה מחדש
     void list.offsetWidth; // forcing reflow
     list.style.animationDuration = durationSeconds + "s";
     list.classList.add("scrolling");
@@ -159,7 +226,9 @@ async function init() {
 
 init();
 
-// רענון נתוני הדשבורד כל 2 דקות (רק כשהדף גלוי)
+// רענון נתוני הדשבורד כל 5 דקות (רק כשהדף גלוי).
+// הקריאות עצמן מפוזרות אחת-אחת בתוך לולאת השליפה,
+// והנתונים מוצגים רק אחרי שכולן חזרו.
 setInterval(() => {
     if (!document.hidden) loadDashboard();
-}, 120000);
+}, 300000);
