@@ -7,6 +7,21 @@
 const GOAL = 941 * 4800; // = 4,516,800
 
 // ============================================
+// שכבת טעינה
+// צגת רקע מטושטש על כל המסך עד שהנתונים האמיתיים מגיעים,
+// כך שלא רואים את ה־"₪ 0" בזמן ההמתנה. מהבהב הלוגו בטעינה.
+// ============================================
+function showLoading() {
+    const overlay = document.getElementById("loading-overlay");
+    if (overlay) overlay.classList.remove("hidden");
+}
+
+function hideLoading() {
+    const overlay = document.getElementById("loading-overlay");
+    if (overlay) overlay.classList.add("hidden");
+}
+
+// ============================================
 // טעינת הדשבורד מהשרת
 // ============================================
 async function loadDashboard() {
@@ -113,6 +128,8 @@ spawnConfetti();
 // נמשיך לבדוק כמה פעמים עד שהנתונים המלאים מגיעים.
 // ============================================
 async function init() {
+    // מראים את שכבת הטעינה עד שנתונים אמיתיים מגיעים
+    showLoading();
     await loadDashboard();
     // אם בטעינה הראשונה אין עדיין נתונים (השרת עדיין בונה מטמון)
     // — ממשיך לבדוק כל 5 שניות עד שהנתונים המלאים מגיעים
@@ -136,6 +153,9 @@ async function init() {
 }
 
 function renderFromServer(data) {
+    // הגיעו נתונים אמיתיים — מסירים את שכבת הטעינה והמסך מתמקד
+    hideLoading();
+
     document.getElementById("total-amount").textContent =
         "₪ " + Number(data.total || 0).toLocaleString();
     document.getElementById("target").textContent =

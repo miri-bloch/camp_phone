@@ -21,6 +21,51 @@ body {
     padding: 1rem 1.5rem 1rem calc(260px + 1.5rem);
 }
 
+/* ====== שכבת טעינה ====== */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.2rem;
+    /* רקע כהה חצי־שקוף + ערפל שמטשטש את כל המסך שמאחוריו, כך שלא רואים את ה־₪ 0 */
+    background: rgba(28, 15, 5, 0.82);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: opacity 0.7s ease, visibility 0.7s ease;
+}
+.loading-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+.loading-logo {
+    max-width: min(75vw, 420px);
+    /* הלוגו מתחיל חיוור/מטושטש, ובזמן ההמתנה מתמלא בצבע שוב ושוב
+       (כמו "התקדמות הטעינה") עד שהנתונים מגיעים. */
+    filter: grayscale(100%) brightness(0.5) blur(2px);
+    animation: colorize 2.6s ease-in-out infinite alternate;
+}
+@keyframes colorize {
+    0%   { filter: grayscale(100%) brightness(0.5) blur(2px); }
+    60%  { filter: grayscale(40%) brightness(0.85) blur(0.5px); }
+    100% { filter: grayscale(0%) brightness(1) blur(0); }
+}
+.loading-label {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #ffd700;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 1; }
+}
+
 /* ====== קונפטי ====== */
 .confetti-container {
     position: fixed;
@@ -226,7 +271,8 @@ body {
     border-right: 2px solid rgba(255, 215, 0, 0.35);
     box-shadow: 6px 0 24px rgba(0, 0, 0, 0.45);
     backdrop-filter: blur(6px);
-    pointer-events: none;
+    /* מופעל כדי שההובל על הרשימה יעבוד (ולעצור את הגלילה) */
+    pointer-events: auto;
 }
 .side-ticker-head {
     text-align: center;
@@ -253,6 +299,10 @@ body {
 }
 .side-ticker-list.scrolling {
     animation: scrollUp linear infinite;
+}
+/* כשמרחפים על הרשימה הצדדית — הגלילה נעצרת במקומה */
+.side-ticker:hover .side-ticker-list.scrolling {
+    animation-play-state: paused;
 }
 @keyframes scrollUp {
     from { transform: translateY(0); }
