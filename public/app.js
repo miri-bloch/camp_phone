@@ -21,6 +21,8 @@ function hideLoading() {
     if (overlay) overlay.classList.add("hidden");
 }
 
+let hasDashboardData = false;
+
 // ============================================
 // טעינת הדשבורד מהשרת
 // ============================================
@@ -134,14 +136,14 @@ async function init() {
     // אם בטעינה הראשונה אין עדיין נתונים (השרת עדיין בונה מטמון)
     // — ממשיך לבדוק כל 5 שניות עד שהנתונים המלאים מגיעים
     let attempts = 0;
-    while (lastTeams.length === 0 && attempts < 60) {
+    while (!hasDashboardData && attempts < 60) {
         attempts++;
         await new Promise((r) => setTimeout(r, 5000));
         try {
             const res = await fetch("/api/dashboard");
             if (res.ok) {
                 const data = await res.json();
-                if ((data.top || []).length > 0) {
+                if (data.updatedAt) {
                     renderFromServer(data);
                     break;
                 }
@@ -153,8 +155,9 @@ async function init() {
 }
 
 function renderFromServer(data) {
-    // הגיעו נתונים אמיתיים — מסירים את שכבת הטעינה והמסך מתמקד
-    hideLoading();
+    // updatedAt קיים רק אחרי שסבב שליפת הנתונים הסתיים, גם אם הסכום הוא אפס.
+    hasDashboardData = Boolean(data.updatedAt);
+    if (hasDashboardData) hideLoading();
 
     document.getElementById("total-amount").textContent =
         "₪ " + Number(data.total || 0).toLocaleString();
@@ -163,6 +166,15 @@ function renderFromServer(data) {
     const percent = GOAL > 0 ? Math.round((data.total / GOAL) * 100) : 0;
     document.getElementById("progress").textContent = percent + "%";
     document.getElementById("progress-fill").style.width = Math.min(percent, 100) + "%";
+
+    const updatedAt = document.getElementById("data-updated");
+    if (updatedAt && data.updatedAt) {
+        const formattedDate = new Intl.DateTimeFormat("he-IL", {
+            dateStyle: "short",
+            timeStyle: "short",
+        }).format(new Date(data.updatedAt));
+        updatedAt.textContent = "עודכן לאחרונה: " + formattedDate;
+    }
 
     const topList = document.getElementById("top-list");
     topList.innerHTML = "";

@@ -18,8 +18,8 @@ const CAMPAIGN_ID = 47850;
 const BASE = `https://api.charidy.com/api/v1/campaign/${CAMPAIGN_ID}/teams?q=`;
 // אין בנות מעל קוד 950 — הן לא רלוונטיות
 const MAX_TEAM_CODE = 950;
-// כמה אלפיות שנייה בין קריאה לקריאה (פריסה איטית ובטוחה)
-const CALL_GAP_MS = 1200;
+// כמה אלפיות שנייה בין קריאה לקריאה (קצב מתון כדי לצמצם זמן טעינה בלי להציף את ה-API)
+const CALL_GAP_MS = 500;
 
 // מחלץ את מספר הקבוצה מתוך "סמינר פוירשטיין N"
 function teamCode(name) {
@@ -84,8 +84,8 @@ async function getDashboardData() {
             try {
                 console.log("בוחן נתונים מצ'רידי (פעם אחת בשרת)...");
                 const { teams, total } = await fetchAllTeams();
-                cache.data = { total, teams };
                 cache.updatedAt = Date.now();
+                cache.data = { total, teams, updatedAt: cache.updatedAt };
                 console.log("עודכן מטמון: סה\"כ", total, "| קבוצות:", teams.length);
             } catch (e) {
                 console.error("שגיאה בשליפת נתונים מצ'רידי:", e.message);
@@ -96,7 +96,7 @@ async function getDashboardData() {
     }
 
     // מחזירים את הנתונים הקיימים (או ערכים ריקים אם אין עדיין כלום)
-    return cache.data || { total: 0, teams: [] };
+    return cache.data || { total: 0, teams: [], updatedAt: null };
 }
 
 // ============================================

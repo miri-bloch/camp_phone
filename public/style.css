@@ -61,6 +61,19 @@ body {
     text-shadow: 0 2px 8px rgba(0,0,0,0.8);
     animation: pulse 1.4s ease-in-out infinite;
 }
+.loading-message {
+    max-width: min(90vw, 620px);
+    padding: 1rem 1.4rem;
+    border: 2px solid rgba(255, 215, 0, 0.75);
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff3bf;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.7;
+    text-align: center;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
 @keyframes pulse {
     0%, 100% { opacity: 0.4; }
     50%      { opacity: 1; }
@@ -235,6 +248,12 @@ body {
     font-size: 1.4rem;
     margin-bottom: 0.8rem;
     text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+}
+.data-updated {
+    margin: 0.8rem 0 0;
+    color: rgba(245, 233, 208, 0.75);
+    font-size: 0.8rem;
+    text-align: center;
 }
 #top-list { list-style: none; }
 #top-list li {
